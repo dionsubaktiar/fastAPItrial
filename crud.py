@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from models import Item  # Make sure the Item model is imported
+from models import Item
+from faker import Faker
 
 # Create a new item in the database
 def create_item(db: Session, name: str, description: str):
@@ -36,30 +37,24 @@ def delete_item(db: Session, item_id: int):
         db.commit()
     return db_item
 
-# Seeder function to insert more realistic sample data
+# Seeder function to insert 100+ realistic sample data using Faker
 def seed_data(db: Session):
-    # Example of more realistic item data
-    items = [
-        Item(name="Wireless Mouse", description="Ergonomic wireless mouse with Bluetooth connectivity."),
-        Item(name="Mechanical Keyboard", description="RGB backlit mechanical keyboard with customizable switches."),
-        Item(name="Laptop Stand", description="Adjustable laptop stand for better posture."),
-        Item(name="Bluetooth Headphones", description="Noise-canceling Bluetooth headphones with long battery life."),
-        Item(name="Smartphone Charger", description="Fast-charging USB-C cable for modern smartphones."),
-        Item(name="Gaming Mouse Pad", description="Large mouse pad with non-slip base and smooth surface for gaming."),
-        Item(name="External SSD", description="Portable solid-state drive with 1TB storage capacity."),
-        Item(name="USB-C Hub", description="Multi-port USB-C hub for connecting multiple devices."),
-        Item(name="Phone Case", description="Durable and protective phone case for iPhone 13."),
-        Item(name="Smartwatch", description="Fitness tracking smartwatch with heart rate monitor and GPS."),
-    ]
+    fake = Faker()
+    items = []
+
+    # Generate 100+ fake items
+    for _ in range(100):
+        item = Item(
+            name=fake.catch_phrase(),  # Generates a random product name
+            description=fake.text(max_nb_chars=100)  # Generates a random description
+        )
+        items.append(item)
 
     # Add all items to the session
     db.add_all(items)
     db.commit()
 
-    # Refresh the first item to get the inserted data (e.g., ID after insert)
-    db.refresh(items[0])
-
-    return {"message": "Seed data inserted successfully!"}
+    return {"message": f"Seeded {len(items)} items successfully!"}
 
 def clear_all_data(db: Session):
     try:
