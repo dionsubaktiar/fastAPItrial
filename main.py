@@ -28,17 +28,73 @@ def home():
     return {"Hello": "World"}
 
 # Create Item (POST)
-# Create Item (POST)
+# @app.post("/items/")
+# async def add_item(
+#     request: Request, 
+#     name: str = Form(...),  # Form field for name
+#     description: str = Form(...),  # Form field for description
+#     price: float = Form(...),  # Form field for price
+#     category: str = Form(...),  # Form field for category
+#     photo: UploadFile = File(...),  # File field for photo
+#     db: Session = Depends(get_db),  # Database session dependency
+# ):
+#     try:
+#         # Save the uploaded photo
+#         file_location = os.path.join(UPLOAD_DIRECTORY, photo.filename)
+#         with open(file_location, "wb") as buffer:
+#             shutil.copyfileobj(photo.file, buffer)
+
+#         # Generate the public URL for the uploaded photo
+#         public_photo_url = f"{request.base_url}uploaded_images/{photo.filename}"
+
+#         # Call the CRUD function to create the item in the database
+#         new_item = create_item(
+#             db=db,
+#             name=name,
+#             description=description,
+#             price=price,
+#             category=category,
+#             photo=public_photo_url,  # Save the public URL in the database
+#         )
+
+#         return {
+#             "message": "Item created successfully",
+#             "item": {
+#                 "id": new_item.id,
+#                 "name": new_item.name,
+#                 "description": new_item.description,
+#                 "price": new_item.price,
+#                 "category": new_item.category,
+#                 "photo": new_item.photo,  # Return the public URL
+#             },
+#         }
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+# List of allowed file extensions
+ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif"]
+
+# Function to check file extension
+def allowed_file(filename: str) -> bool:
+    # Get the file extension (everything after the last dot)
+    extension = filename.rsplit('.', 1)[-1].lower()
+    return extension in ALLOWED_EXTENSIONS
+
+# Example usage in your route
 @app.post("/items/")
 async def add_item(
     request: Request, 
-    name: str = Form(...),  # Form field for name
-    description: str = Form(...),  # Form field for description
-    price: float = Form(...),  # Form field for price
-    category: str = Form(...),  # Form field for category
-    photo: UploadFile = File(...),  # File field for photo
-    db: Session = Depends(get_db),  # Database session dependency
+    name: str = Form(...),  
+    description: str = Form(...),
+    price: float = Form(...),
+    category: str = Form(...),
+    photo: UploadFile = File(...), 
+    db: Session = Depends(get_db)
 ):
+    # Validate file extension
+    if not allowed_file(photo.filename):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only jpg, jpeg, png, and gif are allowed.")
+
     try:
         # Save the uploaded photo
         file_location = os.path.join(UPLOAD_DIRECTORY, photo.filename)
@@ -48,7 +104,7 @@ async def add_item(
         # Generate the public URL for the uploaded photo
         public_photo_url = f"{request.base_url}uploaded_images/{photo.filename}"
 
-        # Call the CRUD function to create the item in the database
+        # Create the item in the database
         new_item = create_item(
             db=db,
             name=name,
@@ -66,7 +122,7 @@ async def add_item(
                 "description": new_item.description,
                 "price": new_item.price,
                 "category": new_item.category,
-                "photo": new_item.photo,  # Return the public URL
+                "photo": new_item.photo,
             },
         }
     except Exception as e:
@@ -155,7 +211,8 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
     db_item = crud.delete_item(db=db, item_id=item_id)
     if db_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
-    return db_item
+    return {"message": "Item deleted successfully"}
+
 
 @app.post("/seed/")
 def run_seeder(db: Session = Depends(get_db)):

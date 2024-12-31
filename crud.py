@@ -6,17 +6,24 @@ from models import Item
 from faker import Faker
 import random
 import os
-from urllib.parse import urlencode
+from urllib.parse import urlencode,urlparse
 
 UPLOAD_DIRECTORY = "./uploaded_images"
 
 def create_item(db: Session, name: str, description: str, price: float, category: str, photo: str):
+    if price <= 0:
+        raise ValueError("Price must be greater than zero.")
+    
+    # Validate photo URL format (you can expand this to check if the photo URL is reachable)
+    parsed_url = urlparse(photo)
+    if not all([parsed_url.scheme, parsed_url.netloc]):
+        raise ValueError("Invalid photo URL.")
+    
     db_item = Item(name=name, description=description, price=price, category=category, photo=photo)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
     return db_item
-
 
 def get_items(db: Session, request: Request, page: int = 1, page_size: int = 10):
     """
