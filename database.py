@@ -1,9 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+import os
 
-# MySQL connection string (replace with your actual database credentials)
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://u1248453_nusantara:Marlboro39.@nusantaratranssentosa.co.id:3306/u1248453_fastapi"
+load_dotenv()
+
+SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 
 # Create the SQLAlchemy engine and session
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
